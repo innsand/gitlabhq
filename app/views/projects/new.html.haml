@@ -10,13 +10,18 @@
   $(function(){
     $("#project_name").live("change", function(){
       var slug = slugify($(this).val());
+      var slugPath = slugifyPath($(this).val());
       $("#project_code").val(slug);
-      $("#project_path").val(slug);
+      $("#project_path").val(slugPath);
     });
   });
 
   function slugify(text) {
-    return text.replace(/[^-a-zA-Z0-9]+/g, '_').toLowerCase();
+    return text.replace(/[^-a-zA-Z0-9\.]+/g, '_').toLowerCase();
+  }
+
+  function slugifyPath(text) {
+    return text.replace(/[^-a-zA-Z0-9\/\.]+/g, '_');
   }
 
   $(function(){
