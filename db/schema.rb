@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120301185805) do
+ActiveRecord::Schema.define(:version => 20120315132931) do
 
   create_table "events", :force => true do |t|
     t.string   "target_type"
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(:version => 20120301185805) do
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
     t.integer  "action"
+    t.integer  "author_id"
   end
 
   create_table "issues", :force => true do |t|
@@ -59,6 +60,9 @@ ActiveRecord::Schema.define(:version => 20120301185805) do
     t.boolean  "closed",        :default => false, :null => false
     t.datetime "created_at",                       :null => false
     t.datetime "updated_at",                       :null => false
+    t.text     "st_commits"
+    t.text     "st_diffs"
+    t.boolean  "merged",        :default => false, :null => false
   end
 
   add_index "merge_requests", ["project_id"], :name => "index_merge_requests_on_project_id"

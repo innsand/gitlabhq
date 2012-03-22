@@ -22,10 +22,7 @@ describe Project do
   end
 
   describe "Respond to" do
-    it { should respond_to(:readers) }
-    it { should respond_to(:writers) }
     it { should respond_to(:repository_writers) }
-    it { should respond_to(:admins) }
     it { should respond_to(:add_access) }
     it { should respond_to(:reset_access) }
     it { should respond_to(:update_repository) }
@@ -78,9 +75,7 @@ describe Project do
     let(:project) { Factory :project }
 
     before do
-      @note = Factory :note,
-        :project => project,
-        :author => Factory(:user)
+      @issue = Factory :issue, :project => project
     end
 
     it { project.last_activity.should == Event.last }
@@ -91,23 +86,22 @@ describe Project do
     let(:project) { Factory :project }
 
     it { project.fresh_commits(3).count.should == 3 }
-    it { project.fresh_commits.first.id.should == "2fb376f61875b58bceee0492e270e9c805294b1a" }
-    it { project.fresh_commits.last.id.should == "0dac878dbfe0b9c6104a87d65fe999149a8d862c" }
+    it { project.fresh_commits.first.id.should == "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a" }
+    it { project.fresh_commits.last.id.should == "f403da73f5e62794a0447aca879360494b08f678" }
   end
 
   describe "commits_between" do
     let(:project) { Factory :project }
 
     subject do
-      commits = project.commits_between("a6d1d4aca0c85816ddfd27d93773f43a31395033",
-                                        "2fb376f61875b58bceee0492e270e9c805294b1a")
+      commits = project.commits_between("3a4b4fb4cde7809f033822a171b9feae19d41fff",
+                                        "8470d70da67355c9c009e4401746b1d5410af2e3")
       commits.map { |c| c.id }
     end
 
-    it { should have(2).elements }
-    it { should include("2fb376f61875b58bceee0492e270e9c805294b1a") }
-    it { should include("4571e226fbcd7be1af16e9fa1e13b7ac003bebdf") }
-    it { should_not include("a6d1d4aca0c85816ddfd27d93773f43a31395033") }
+    it { should have(3).elements }
+    it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
+    it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
   end
 
   describe "Git methods" do
@@ -164,6 +158,34 @@ describe Project do
       it "should return root tree for commit with incorrect path" do
         project.tree(@commit, "invalid_path").should be_nil
       end
+    end
+  end
+
+  describe :update_merge_requests do 
+    let(:project) { Factory :project }
+
+    before do
+      @merge_request = Factory :merge_request,
+        :project => project,
+        :merged => false,
+        :closed => false
+      @key = Factory :key, :user_id => project.owner.id
+    end
+
+    it "should close merge request if last commit from source branch was pushed to target branch" do
+      @merge_request.reloaded_commits
+      @merge_request.last_commit.id.should == "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a"
+      project.update_merge_requests("8716fc78f3c65bbf7bcf7b574febd583bc5d2812", "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a", "refs/heads/stable", @key.identifier)
+      @merge_request.reload
+      @merge_request.merged.should be_true
+      @merge_request.closed.should be_true
+    end
+
+    it "should update merge request commits with new one if pushed to source branch" do 
+      @merge_request.last_commit.should == nil
+      project.update_merge_requests("8716fc78f3c65bbf7bcf7b574febd583bc5d2812", "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a", "refs/heads/master", @key.identifier)
+      @merge_request.reload
+      @merge_request.last_commit.id.should == "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a"
     end
   end
 end
